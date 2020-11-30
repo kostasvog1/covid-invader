@@ -15,6 +15,12 @@ ICON = pygame.image.load('images/pango_saint.jpg')
 END_GAME = pygame.image.load('images/pango_saint.jpg')
 END_GAME = pygame.transform.scale(END_GAME, (640, 360))
 
+PANGO_AVATAR = pygame.image.load('images/pango_avatar.png')
+COVID_AVATAR = pygame.image.load('images/covid_avatar.png')
+
+FULL_LIFE = pygame.image.load('images/life.png')
+HALF_LIFE = pygame.image.load('images/half_life.png')
+
 PANGO_JUMP_IMG = pygame.image.load('images/pango_jump.png')
 PANGO_GREEN_JUMP_IMG = pygame.image.load('images/pango_green_jump.png')
 
@@ -55,6 +61,23 @@ PANGO_GREEN_ATTACK_LEFT = [pygame.image.load('images/pango_green_attack_left_1.p
                            pygame.transform.rotate(PANGO_ATTACK_RIGHT[2], 180),
                            pygame.transform.rotate(PANGO_ATTACK_RIGHT[3], 180)]
 COVID_IMG = [pygame.image.load('images/covid_aura_left.png'), pygame.image.load('images/covid_aura_right.png')]
+
+
+def draw_avatars():
+    win.blit(PANGO_AVATAR, (0, 0))
+    if covid_lives > 0:
+        win.blit(COVID_AVATAR, (640-16, 0))
+
+
+def draw_lives():
+    if pango_green:
+        win.blit(HALF_LIFE, (0+16, 0))
+    else:
+        win.blit(FULL_LIFE, (0 + 16, 0))
+    if covid_lives == 2:
+        win.blit(FULL_LIFE, (640 - 32, 0))
+    elif covid_lives == 1:
+        win.blit(HALF_LIFE, (640 - 32, 0))
 
 
 def draw_covid():
@@ -356,6 +379,7 @@ def tongue_collision():
     global covid_hit_count
     global pango_x
     global covid_hit
+    global covid_lives
 
     tongue_collision.rect = pygame.Rect(tongue_x, tongue_y, 16, 16)
 
@@ -363,7 +387,8 @@ def tongue_collision():
         if not covid_hit:
             if tongue_collision.rect.colliderect(move_towards_pango.rect):
                 covid_hit = True
-                print('HIT')
+                covid_lives -= 1
+
         else:
             if covid_hit_count >= 0:
                 if pango_x < covid_x:
@@ -399,14 +424,17 @@ def move_towards_pango():
     if covid_moving:
         covid_x += min(delta_x, covid_speed) if delta_x > 0 else max(delta_x, -covid_speed)
         covid_y += min(delta_y, covid_speed) if delta_y > 0 else max(delta_y, -covid_speed)
-
-    move_towards_pango.rect = pygame.Rect(covid_x, covid_y, 64, 64)
+    if covid_lives > 0:
+        move_towards_pango.rect = pygame.Rect(covid_x, covid_y, 64, 64)
+    else:
+        move_towards_pango.rect = pygame.Rect(-20, -20, 64, 64)
     # move_towards_pango.hitbox = (covid_x + 5, covid_y, 55, 64)
 
 
 def redraw_game_window():
     win.blit(BG_IMG, (0, 0))
     draw_map(tile_cords)
+    draw_avatars()
     if not pango_jumping and not pango_moving_right and not pango_moving_left:
         draw_pango_still()
     elif pango_still:
@@ -417,7 +445,9 @@ def redraw_game_window():
         draw_pango_jump()
     if pango_attacking:
         draw_pango_attack()
-    draw_covid()
+    if covid_lives > 0:
+        draw_covid()
+    draw_lives()
     pygame.display.update()
 
 
@@ -456,6 +486,7 @@ min_dist = 200
 covid_moving = False
 covid_hit = False
 covid_hit_count = 20
+covid_lives = 2
 
 # game variables
 pygame.init()
